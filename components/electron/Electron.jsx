@@ -1,3 +1,5 @@
+"use client";
+
 import * as THREE from "three";
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -8,6 +10,7 @@ export default function Electron({
   radiusY = 1.15,
   speed = 6,
   rotation = [0, 0, 0],
+  parentRef,
   ...props
 }) {
   const ref = useRef();
@@ -20,10 +23,12 @@ export default function Electron({
     const t = state.clock.getElapsedTime() * speed;
     const x = Math.cos(t) * radiusX;
     const y = Math.sin(t) * radiusY;
+    const localPos = new THREE.Vector3(x, y, 0).applyMatrix4(rotationMatrix);
 
-    // Buat posisi lokal lalu rotasi manual
-    const position = new THREE.Vector3(x, y, 0).applyMatrix4(rotationMatrix);
-    ref.current.position.copy(position);
+    if (parentRef?.current) {
+      const worldPos = parentRef.current.localToWorld(localPos.clone());
+      ref.current.position.copy(worldPos);
+    }
   });
   return (
     <group {...props}>
