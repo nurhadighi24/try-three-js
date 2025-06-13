@@ -20,12 +20,12 @@ export default function GunModel({ onTriggerClick }) {
   const animateTrigger = () => {
     if (triggerRef.current) {
       gsap.to(triggerRef.current.position, {
-        z: triggerRef.current.position.z - 0.1,
-        duration: 0.1,
+        z: triggerRef.current.position.z - 0.05,
+        duration: 0.2,
         onComplete: () => {
           gsap.to(triggerRef.current.position, {
-            z: triggerRef.current.position.z + 0.1,
-            duration: 0.1,
+            z: triggerRef.current.position.z + 0.05,
+            duration: 0.2,
           });
         },
       });
