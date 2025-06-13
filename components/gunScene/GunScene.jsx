@@ -6,10 +6,13 @@ import GunModel from "../gunModel/GunModel";
 import {
   ContactShadows,
   Environment,
+  GizmoHelper,
+  GizmoViewcube,
   OrbitControls,
   Stats,
 } from "@react-three/drei";
 import { CameraController } from "../cameraController";
+import { Leva } from "leva";
 
 export default function GunScene() {
   const controlsRef = useRef();
@@ -30,7 +33,16 @@ export default function GunScene() {
   };
 
   return (
-    <div style={{ position: "relative", height: "100vh" }}>
+    <div
+      style={{
+        position: "relative",
+        height: "100vh",
+        overflow: "visible",
+        zIndex: 999,
+      }}
+    >
+      <Leva collapsed={false} />
+      {/* <GizmoHelper alignment="bottom-right" margin={[80, 80]}></GizmoHelper> */}
       <Canvas
         shadows
         camera={{ position: initialCameraPos, fov: 30 }}
@@ -69,8 +81,8 @@ export default function GunScene() {
           blur={2}
           far={5}
         /> */}
-          {/* <axesHelper args={[30]} />
-        <gridHelper args={[30, 30]} /> */}
+          <axesHelper args={[30]} />
+          {/* <gridHelper args={[30, 30]} /> */}
         </Suspense>
         <Stats />
       </Canvas>

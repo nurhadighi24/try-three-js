@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import {
   ScrollControls,
   Scroll,
@@ -15,13 +15,29 @@ import { Atom } from "../atom";
 import { Cube } from "../cube";
 import { Sphere3D } from "../sphere3d";
 import { RotatingLights } from "../rotatingLights";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 export default function ScrollableScene() {
   const [isClient, setIsClient] = useState(false);
+  const starsRef = useRef();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  function RotatingStars() {
+    const starsRef = useRef();
+    useFrame(() => {
+      if (starsRef.current) {
+        starsRef.current.rotation.y += -0.005; // 🌌 Rotasi horizontal lambat
+        // starsRef.current.rotation.x += 0.0005; // Optional: vertikal
+      }
+    });
+    return (
+      <group ref={starsRef}>
+        <Stars count={500} speed={10} />
+      </group>
+    );
+  }
 
   if (!isClient) return null;
 
@@ -29,7 +45,7 @@ export default function ScrollableScene() {
     <div>
       <Canvas
         camera={{ position: [0, 0, 10], fov: 45 }}
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100vh", width: "100%" }}
       >
         {/* 🌟 Lighting */}
 
@@ -44,7 +60,8 @@ export default function ScrollableScene() {
           enableRotate={true}
         />
         <color attach="background" args={["#141414"]} />
-        <Stars count={200} speed={10} />
+
+        <RotatingStars />
         <EffectComposer>
           <Bloom mipmapBlur luminanceThreshold={1} radius={0.7} />
         </EffectComposer>

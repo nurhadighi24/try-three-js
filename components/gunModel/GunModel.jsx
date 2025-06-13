@@ -1,17 +1,36 @@
 "use client";
 
 import { useGLTF, Html } from "@react-three/drei";
-import React, { useRef, useState } from "react";
+import gsap from "gsap";
+import { useControls } from "leva";
+import React, { useEffect, useRef, useState } from "react";
 
 useGLTF.preload("./models/gun.glb");
 
 export default function GunModel({ onTriggerClick }) {
+  const triggerRef = useRef();
   const group = useRef();
-  const { nodes, scene } = useGLTF("./models/gun.glb");
-  const triggerNode = nodes["Trigger1_low_body_0"];
+  const { nodes, scene, materials } = useGLTF("./models/gun_diff.glb");
 
   const [meshList, setMeshList] = useState([]);
   const [materialList, setMaterialList] = useState([]);
+
+  const triggerNode = nodes["Trigger1_low_Body_0"];
+
+  const animateTrigger = () => {
+    if (triggerRef.current) {
+      gsap.to(triggerRef.current.position, {
+        z: triggerRef.current.position.z - 0.1,
+        duration: 0.1,
+        onComplete: () => {
+          gsap.to(triggerRef.current.position, {
+            z: triggerRef.current.position.z + 0.1,
+            duration: 0.1,
+          });
+        },
+      });
+    }
+  };
 
   useEffect(() => {
     const meshes = [];
@@ -30,9 +49,43 @@ export default function GunModel({ onTriggerClick }) {
     setMaterialList(Array.from(materials));
   }, [scene]);
 
+  useControls("Meshes", () =>
+    Object.fromEntries(
+      meshList.map((name) => [
+        name,
+        {
+          value: false,
+          onChange: (v) => {
+            const mesh = nodes[name];
+            if (mesh && mesh.material) {
+              mesh.material.wireframe = v;
+            }
+          },
+        },
+      ])
+    )
+  );
+
+  useControls("Materials", () => {
+    const entries = materialList.map((name, i) => [
+      name,
+      { value: false, editable: false },
+    ]);
+    return Object.fromEntries(entries);
+  });
+
   return (
     <group ref={group} scale={[30, 30, 30]}>
-      <primitive object={scene} />
+      {Object.values(nodes).map((node, i) => {
+        if (node.isMesh) {
+          if (node.name === "Trigger1_low_Body_0") {
+            return <primitive object={node} ref={triggerRef} key={i} />;
+          }
+          return <primitive object={node} key={i} />;
+        }
+        return null;
+      })}
+
       {triggerNode && (
         <Html
           position={triggerNode.position}
@@ -40,7 +93,10 @@ export default function GunModel({ onTriggerClick }) {
           style={{ pointerEvents: "auto" }}
         >
           <button
-            onClick={onTriggerClick}
+            onClick={() => {
+              animateTrigger();
+              onTriggerClick?.();
+            }}
             style={{
               width: 40,
               height: 40,
