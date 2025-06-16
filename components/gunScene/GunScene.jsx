@@ -13,24 +13,73 @@ import {
 } from "@react-three/drei";
 import { CameraController } from "../cameraController";
 import { Leva } from "leva";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function GunScene() {
   const controlsRef = useRef();
   const [triggerFocus, setTriggerFocus] = useState(false);
+  const [nozzleFocus, setNozzleFocus] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const focusParam = searchParams.get("focus");
+  const [cameraReady, setCameraReady] = useState(false);
+  const [autoRotateEnabled, setAutoRotateEnabled] = useState(true);
+
+  useEffect(() => {
+    setCameraReady(true);
+  }, [triggerFocus, nozzleFocus]);
+
   const [showInfo, setShowInfo] = useState(false);
   const [initialCameraPos] = useState([20, 10, 25]);
 
   const handleFocusTrigger = () => {
-    setTriggerFocus((prev) => {
-      const next = !prev;
-      setShowInfo(next);
-      if (controlsRef.current) {
-        controlsRef.current.autoRotate = !next;
-      }
-
-      return next;
-    });
+    const next = !triggerFocus;
+    setTriggerFocus(next);
+    setNozzleFocus(false);
+    setShowInfo(next);
   };
+
+  const handleFocusNozzle = () => {
+    const next = !nozzleFocus;
+    setNozzleFocus(next);
+    setTriggerFocus(false);
+    setShowInfo(next);
+  };
+
+  useEffect(() => {
+    if (focusParam === "trigger") {
+      setTriggerFocus(true);
+      setNozzleFocus(false);
+      setShowInfo(true);
+    } else if (focusParam === "nozzle") {
+      setNozzleFocus(true);
+      setTriggerFocus(false);
+      setShowInfo(true);
+    } else {
+      setTriggerFocus(false);
+      setNozzleFocus(false);
+      setShowInfo(false);
+    }
+  }, [focusParam]);
+
+  useEffect(() => {
+    if (triggerFocus) {
+      router.replace("?focus=trigger");
+    } else if (nozzleFocus) {
+      router.replace("?focus=nozzle");
+    } else {
+      router.replace("/");
+    }
+  }, [triggerFocus, nozzleFocus]);
+
+  useEffect(() => {
+    if (triggerFocus || nozzleFocus) {
+      setAutoRotateEnabled(false);
+    } else {
+      setAutoRotateEnabled(true);
+    }
+  }, [triggerFocus, nozzleFocus]);
 
   return (
     <div
@@ -52,13 +101,19 @@ export default function GunScene() {
           ref={controlsRef}
           enableZoom={false}
           enableDamping
-          autoRotate
+          autoRotate={autoRotateEnabled}
+          autoRotateSpeed={0.7}
           target={[0, 0, 1]}
         />
-        <CameraController
-          triggerFocus={triggerFocus}
-          initialCameraPos={initialCameraPos}
-        />
+        {cameraReady && (
+          <CameraController
+            key={`${triggerFocus}-${nozzleFocus}`}
+            triggerFocus={triggerFocus}
+            nozzleFocus={nozzleFocus}
+            initialCameraPos={initialCameraPos}
+          />
+        )}
+
         <spotLight position={[10, 10, 10]} intensity={1} />
         <directionalLight
           position={[5, 10, 5]}
@@ -73,7 +128,10 @@ export default function GunScene() {
         <Suspense fallback={null}>
           <Environment preset="warehouse" background backgroundBlurriness={0} />
 
-          <GunModel onTriggerClick={handleFocusTrigger} />
+          <GunModel
+            onTriggerClick={handleFocusTrigger}
+            onNozzleClick={handleFocusNozzle}
+          />
           {/* <ContactShadows
           position={[0, -1.2, 0]}
           opacity={0.5}
@@ -81,13 +139,12 @@ export default function GunScene() {
           blur={2}
           far={5}
         /> */}
-          <axesHelper args={[30]} />
+          {/* <axesHelper args={[30]} /> */}
           {/* <gridHelper args={[30, 30]} /> */}
         </Suspense>
         <Stats />
       </Canvas>
       <button
-        onClick={handleFocusTrigger}
         style={{
           position: "absolute",
           top: 20,
@@ -100,13 +157,13 @@ export default function GunScene() {
           fontWeight: "bold",
           fontSize: "1rem",
           border: "none",
-          cursor: "pointer",
+
           zIndex: 10,
         }}
       >
-        1
+        i
       </button>
-      {showInfo && (
+      {showInfo && (triggerFocus || nozzleFocus) && (
         <div
           style={{
             position: "absolute",
@@ -120,8 +177,12 @@ export default function GunScene() {
             zIndex: 10,
           }}
         >
-          <h3>Trigger Information</h3>
-          <p>This is the trigger of the gun.</p>
+          <h3>{triggerFocus ? "Trigger Information" : "Nozzle Information"}</h3>
+          <p>
+            {triggerFocus
+              ? "This is the trigger of the gun."
+              : "This is the nozzle. It's used to direct the projectile or gas output."}
+          </p>
         </div>
       )}
     </div>
