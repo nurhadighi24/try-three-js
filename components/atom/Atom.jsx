@@ -17,13 +17,17 @@ export default function Atom(props) {
   );
   return (
     <group ref={atomRef} {...props}>
-      <Electron rotation={[0, 0, 0]} speed={6} parentRef={atomRef} />
+      <Electron rotation={[Math.PI / 3, 0, 0]} speed={6} parentRef={atomRef} />
       <Electron
-        rotation={[0, 0, Math.PI / 3]}
-        speed={6.5}
+        rotation={[-Math.PI / 12, 0, Math.PI / 3]}
+        speed={6}
         parentRef={atomRef}
       />
-      <Electron rotation={[0, 0, -Math.PI / 3]} speed={7} parentRef={atomRef} />
+      <Electron
+        rotation={[Math.PI / 12, 0, -Math.PI / 3]}
+        speed={6}
+        parentRef={atomRef}
+      />
       <Sphere args={[0.35, 64, 64]}>
         <meshBasicMaterial color={[6, 0.5, 2]} toneMapped={false} />
       </Sphere>
